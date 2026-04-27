@@ -72,14 +72,16 @@ Names accept letters, numbers, underscores, and hyphens, up to 24 characters. Th
 
 If you have already reached your home limit, the command tells you and asks you to delete one first. Setting a home with a name you already use overwrites it (does not count against the limit).
 
-> Screenshot placeholder: chat output of `/sethome basecamp` showing the green "Set home basecamp" confirmation.
+**Custom icon (since v0.2.0).** Whatever you are holding in your main hand when you run `/sethome` becomes that home's icon in the picker GUI. This works for any item: a custom-named banner with a pattern, a player head, a clock, a flower, anything. Empty hand falls back to a plain white banner. To change the icon later, stand at the home, hold a new item, and run `/sethome <samename>` again to overwrite.
+
+> Screenshot placeholder: chat output of `/sethome basecamp` showing the green "Set home basecamp with icon: Lime Banner" confirmation.
 
 #### `/home`
 
-With no argument, opens the home picker. This is a 27-slot chest GUI showing every home you have, each as a clickable banner. The window title shows your usage, like `Homes (3/5)`.
+With no argument, opens the home picker. This is a 27-slot chest GUI showing every home you have. Each slot uses the icon you held when running `/sethome` (or a plain white banner for older homes and empty-hand sets). The window title shows your usage, like `Homes (3/5)`.
 
-- **Click** a banner to teleport to that home.
-- **Shift-click** a banner to delete the home.
+- **Click** a slot to teleport to that home.
+- **Shift-click** a slot to delete the home.
 
 If you have no homes yet, the picker shows a paper hint item with instructions for `/sethome`.
 
@@ -288,11 +290,19 @@ A home file looks like this:
       "y": 64.0,
       "z": -45.5,
       "yaw": 90.0,
-      "pitch": 0.0
+      "pitch": 0.0,
+      "icon": {
+        "id": "minecraft:lime_banner",
+        "components": {
+          "minecraft:banner_patterns": [{"pattern": "minecraft:globe", "color": "white"}]
+        }
+      }
     }
   ]
 }
 ```
+
+The `icon` field is optional. When present it stores the full ItemStack (item id, count, components) of whatever the player was holding when they ran `/sethome`. Old homes without an icon load fine and render as white banners.
 
 The format is plain JSON, so admins can edit files directly if needed. Stop the server first to avoid race conditions.
 

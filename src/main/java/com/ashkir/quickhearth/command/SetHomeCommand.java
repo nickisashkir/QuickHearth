@@ -1,17 +1,19 @@
 package com.ashkir.quickhearth.command;
 
+import com.ashkir.quickhearth.Perms;
 import com.ashkir.quickhearth.QuickHearth;
 import com.ashkir.quickhearth.data.Home;
 import com.ashkir.quickhearth.data.HomeStorage;
+import com.ashkir.quickhearth.data.ItemSerde;
 import com.ashkir.quickhearth.limits.HomeLimitProvider;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.ashkir.quickhearth.Perms;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 public final class SetHomeCommand {
     private SetHomeCommand() {}
@@ -47,12 +49,30 @@ public final class SetHomeCommand {
                 return 0;
             }
         }
+
+        ItemStack mainHand = p.getMainHandItem();
+        String iconJson = null;
+        Component iconLabel = null;
+        if (!mainHand.isEmpty()) {
+            iconJson = ItemSerde.serialize(mainHand, p.level().getServer().registryAccess());
+            iconLabel = mainHand.getHoverName();
+        }
+
         Home home = new Home(name,
             p.level().dimension().identifier().toString(),
             p.getX(), p.getY(), p.getZ(),
-            p.getYRot(), p.getXRot());
+            p.getYRot(), p.getXRot(),
+            iconJson);
         storage.set(p.getUUID(), home);
-        p.sendSystemMessage(Component.literal((overwrite ? "\u00a7eUpdated" : "\u00a7aSet") + " home \u00a7f" + name));
+
+        Component msg;
+        String prefix = (overwrite ? "\u00a7eUpdated" : "\u00a7aSet") + " home \u00a7f" + name;
+        if (iconLabel != null) {
+            msg = Component.literal(prefix + "\u00a77 with icon: ").append(iconLabel);
+        } else {
+            msg = Component.literal(prefix);
+        }
+        p.sendSystemMessage(msg);
         return 1;
     }
 }

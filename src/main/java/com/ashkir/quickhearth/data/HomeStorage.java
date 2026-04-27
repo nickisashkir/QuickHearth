@@ -81,6 +81,11 @@ public class HomeStorage {
             if (arr != null) {
                 for (JsonElement e : arr) {
                     JsonObject o = e.getAsJsonObject();
+                    String iconJson = null;
+                    if (o.has("icon") && !o.get("icon").isJsonNull()) {
+                        JsonElement iconEl = o.get("icon");
+                        iconJson = iconEl.isJsonPrimitive() ? iconEl.getAsString() : iconEl.toString();
+                    }
                     Home h = new Home(
                         o.get("name").getAsString(),
                         o.get("dim").getAsString(),
@@ -88,7 +93,8 @@ public class HomeStorage {
                         o.get("y").getAsDouble(),
                         o.get("z").getAsDouble(),
                         o.has("yaw") ? o.get("yaw").getAsFloat() : 0f,
-                        o.has("pitch") ? o.get("pitch").getAsFloat() : 0f
+                        o.has("pitch") ? o.get("pitch").getAsFloat() : 0f,
+                        iconJson
                     );
                     map.put(h.name().toLowerCase(Locale.ROOT), h);
                 }
@@ -113,6 +119,9 @@ public class HomeStorage {
             o.addProperty("z", h.z());
             o.addProperty("yaw", h.yaw());
             o.addProperty("pitch", h.pitch());
+            if (h.icon() != null && !h.icon().isBlank()) {
+                o.add("icon", JsonParser.parseString(h.icon()));
+            }
             arr.add(o);
         }
         root.add("homes", arr);
