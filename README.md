@@ -30,13 +30,13 @@ Works on dedicated servers and in single-player worlds. Vanilla clients connecti
 - Fabric Loader 0.18 or newer
 - Fabric API
 - Java 25
-- [sgui](https://modrinth.com/mod/sgui) version `2.0.0+26.1` (required, drives the home picker GUI)
+- [sgui](https://github.com/Patbox/sgui) `2.0.0+26.1` (drives the home picker GUI). **Bundled inside the QuickHearth jar since v0.2.2** via Fabric's jar-in-jar mechanism. You do not need to install it separately. If a server already has sgui standalone, Fabric Loader picks the highest version automatically.
 - [LuckPerms-Fabric](https://luckperms.net/) (optional, only needed for rank-based home limits and per-command permission gating)
 
 ## Installation
 
 1. Download `quickhearth-X.Y.Z+26.1.jar` from the [releases page](https://github.com/nickisashkir/QuickHearth/releases).
-2. Drop it into your server's `mods/` folder alongside Fabric API and sgui.
+2. Drop it into your server's `mods/` folder alongside Fabric API. sgui is bundled, no separate download needed.
 3. (Optional) Drop in LuckPerms-Fabric if you want rank-based home limits.
 4. Start the server. QuickHearth auto-creates the `homes_bonus` scoreboard objective on first run.
 

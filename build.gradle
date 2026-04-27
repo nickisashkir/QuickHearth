@@ -29,7 +29,7 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    implementation "eu.pb4:sgui:${project.sgui_version}"
+    implementation include("eu.pb4:sgui:${project.sgui_version}")
 
     compileOnly "net.luckperms:api:${project.luckperms_api_version}"
 }
