@@ -4,7 +4,7 @@ A server-side homes, spawn, and teleport-request mod for Minecraft 26.1 on Fabri
 
 QuickHearth covers `/sethome`, `/home`, `/delhome`, `/homes`, `/spawn`, `/tpa`, `/tpahere` (with a `/tpr` alias), `/tpaccept`, `/tpdeny`, and `/tpatoggle`. It deliberately does not include `/back`, `/rtp`, or `/warp`.
 
-Vanilla clients work out of the box. No client-side mod is required.
+Works on dedicated servers and in single-player worlds. Vanilla clients connecting to a dedicated server work out of the box (no client-side mod required).
 
 ## Table of Contents
 
