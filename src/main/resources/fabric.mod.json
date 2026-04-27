@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "quickhearth",
+  "version": "${version}",
+  "name": "QuickHearth",
+  "description": "Homes GUI and teleport commands. Clean /home, /spawn, and TPA with LuckPerms-aware home limits and a chest-style home picker.",
+  "authors": ["Nicky (nickisashkir)"],
+  "contact": {
+    "homepage": "https://github.com/nickisashkir/quickhearth",
+    "sources": "https://github.com/nickisashkir/quickhearth"
+  },
+  "license": "MIT",
+  "environment": "server",
+  "entrypoints": {
+    "main": ["com.ashkir.quickhearth.QuickHearth"]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "fabric-api": "*",
+    "minecraft": "~26.1",
+    "java": ">=25",
+    "sgui": "*"
+  },
+  "suggests": {
+    "luckperms": "*"
+  }
+}
