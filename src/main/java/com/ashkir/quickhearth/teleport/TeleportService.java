@@ -2,6 +2,7 @@ package com.ashkir.quickhearth.teleport;
 
 import com.ashkir.quickhearth.CombatTracker;
 import com.ashkir.quickhearth.Config;
+import com.ashkir.quickhearth.Perms;
 import com.ashkir.quickhearth.QuickHearth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -38,11 +39,13 @@ public class TeleportService {
     private final Map<UUID, Long> cooldownUntil = new HashMap<>();
 
     public boolean isOnCooldown(ServerPlayer p) {
+        if (Perms.check(p, "quickhearth.bypass.cooldown", false)) return false;
         Long until = cooldownUntil.get(p.getUUID());
         return until != null && p.level().getGameTime() < until;
     }
 
     public int cooldownRemaining(ServerPlayer p) {
+        if (Perms.check(p, "quickhearth.bypass.cooldown", false)) return 0;
         Long until = cooldownUntil.get(p.getUUID());
         if (until == null) return 0;
         long remaining = until - p.level().getGameTime();
@@ -65,11 +68,26 @@ public class TeleportService {
                 + combat.remainingSeconds(p) + "s\u00a7c before teleporting."));
             return false;
         }
-        long now = p.level().getGameTime();
-        long completeAt = now + Config.WARMUP_TICKS;
+
+        boolean bypassWarmup = Perms.check(p, "quickhearth.bypass.warmup", false);
+        boolean bypassCooldown = Perms.check(p, "quickhearth.bypass.cooldown", false);
         UUID id = p.getUUID();
+
+        if (bypassWarmup) {
+            doTeleport(p, dest);
+            if (!bypassCooldown) {
+                cooldownUntil.put(id, p.level().getGameTime() + cooldownTicks);
+            }
+            if (onComplete != null) onComplete.run();
+            p.sendSystemMessage(Component.literal("\u00a77Teleported to \u00a7f" + label));
+            return true;
+        }
+
+        long completeAt = p.level().getGameTime() + Config.WARMUP_TICKS;
         Pending pt = new Pending(p, dest, completeAt, () -> {
-            cooldownUntil.put(id, p.level().getGameTime() + cooldownTicks);
+            if (!bypassCooldown) {
+                cooldownUntil.put(id, p.level().getGameTime() + cooldownTicks);
+            }
             if (onComplete != null) onComplete.run();
         });
         pending.put(id, pt);

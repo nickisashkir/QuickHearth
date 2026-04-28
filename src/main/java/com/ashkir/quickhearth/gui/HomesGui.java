@@ -21,11 +21,14 @@ import java.util.Optional;
 public final class HomesGui {
     private HomesGui() {}
 
-    private static final int OWNED_SLOTS = 18;
-    private static final int SHARED_SLOTS = 9;
-    private static final int SHARED_START = 18;
+    private static final int OWNED_PER_PAGE = 18;
+    private static final int SHARED_INLINE_LIMIT = 9;
 
     public static void open(ServerPlayer player) {
+        open(player, 0);
+    }
+
+    public static void open(ServerPlayer player, int page) {
         HomeStorage storage = QuickHearth.get().homes();
         HomeLimitProvider limits = QuickHearth.get().limits();
         List<String> names = storage.sortedNames(player.getUUID());
@@ -33,8 +36,15 @@ public final class HomesGui {
         int max = limits.max(player);
         int used = names.size();
 
+        boolean paginated = used > OWNED_PER_PAGE;
+        int totalPages = paginated ? (used + OWNED_PER_PAGE - 1) / OWNED_PER_PAGE : 1;
+        page = Math.max(0, Math.min(page, totalPages - 1));
+
         SimpleGui gui = new SimpleGui(MenuType.GENERIC_9x3, player, false);
-        gui.setTitle(Component.literal("Homes (" + used + "/" + max + ")"));
+        String title = paginated
+            ? "Homes (" + used + "/" + max + ") - Page " + (page + 1) + "/" + totalPages
+            : "Homes (" + used + "/" + max + ")";
+        gui.setTitle(Component.literal(title));
 
         if (names.isEmpty() && shared.isEmpty()) {
             gui.setSlot(13, new GuiElementBuilder(Items.PAPER)
@@ -46,12 +56,14 @@ public final class HomesGui {
             return;
         }
 
+        int startIndex = page * OWNED_PER_PAGE;
+        int endIndex = Math.min(startIndex + OWNED_PER_PAGE, used);
         int slot = 0;
-        for (String name : names) {
-            if (slot >= OWNED_SLOTS) break;
-            Home home = storage.get(player.getUUID(), name).orElse(null);
+        for (int i = startIndex; i < endIndex; i++) {
+            Home home = storage.get(player.getUUID(), names.get(i)).orElse(null);
             if (home == null) continue;
             final Home homeRef = home;
+            final int currentPage = page;
             gui.setSlot(slot, builderForHome(homeRef, player)
                 .setCallback((index, type, input, slotGui) -> {
                     gui.close();
@@ -67,17 +79,52 @@ public final class HomesGui {
             slot++;
         }
 
+        if (paginated) {
+            placeNavAndSharedShortcut(gui, player, page, totalPages, shared);
+        } else {
+            placeSharedRow(gui, player, shared);
+        }
+
+        gui.open();
+    }
+
+    private static void placeNavAndSharedShortcut(SimpleGui gui, ServerPlayer player, int page, int totalPages, List<SharedHome> shared) {
+        if (page > 0) {
+            final int target = page - 1;
+            gui.setSlot(18, new GuiElementBuilder(Items.ARROW)
+                .setName(Component.literal("\u00a7ePrevious page"))
+                .setCallback((idx, type, input, slotGui) -> { gui.close(); open(player, target); })
+                .build());
+        }
+        if (page < totalPages - 1) {
+            final int target = page + 1;
+            gui.setSlot(26, new GuiElementBuilder(Items.ARROW)
+                .setName(Component.literal("\u00a7eNext page"))
+                .setCallback((idx, type, input, slotGui) -> { gui.close(); open(player, target); })
+                .build());
+        }
+        if (!shared.isEmpty()) {
+            gui.setSlot(22, new GuiElementBuilder(Items.WRITABLE_BOOK)
+                .setName(Component.literal("\u00a7eShared Homes (" + shared.size() + ")"))
+                .addLoreLine(Component.literal("\u00a77Click to view homes shared with you."))
+                .setCallback((idx, type, input, slotGui) -> { gui.close(); SharedHomesGui.open(player); })
+                .build());
+        }
+    }
+
+    private static void placeSharedRow(SimpleGui gui, ServerPlayer player, List<SharedHome> shared) {
+        if (shared.isEmpty()) return;
+        boolean overflow = shared.size() > SHARED_INLINE_LIMIT;
+        int displayLimit = overflow ? SHARED_INLINE_LIMIT - 1 : SHARED_INLINE_LIMIT;
         int sharedShown = 0;
-        boolean overflow = shared.size() > SHARED_SLOTS;
-        int displayLimit = overflow ? SHARED_SLOTS - 1 : SHARED_SLOTS;
         for (SharedHome share : shared) {
             if (sharedShown >= displayLimit) break;
             Optional<Home> ownerHome = QuickHearth.get().homes().get(share.owner(), share.homeName());
             if (ownerHome.isEmpty()) continue;
             final Home homeRef = ownerHome.get();
             final SharedHome shareRef = share;
-            gui.setSlot(SHARED_START + sharedShown, SharedHomesGui.sharedBuilder(homeRef, shareRef, player)
-                .setCallback((index, type, input, slotGui) -> {
+            gui.setSlot(18 + sharedShown, SharedHomesGui.sharedBuilder(homeRef, shareRef, player)
+                .setCallback((idx, type, input, slotGui) -> {
                     gui.close();
                     if (type.shift) {
                         QuickHearth.get().shares().unshare(shareRef.owner(), shareRef.homeName(), player.getUUID());
@@ -90,20 +137,14 @@ public final class HomesGui {
                 .build());
             sharedShown++;
         }
-
         if (overflow) {
-            gui.setSlot(SHARED_START + SHARED_SLOTS - 1, new GuiElementBuilder(Items.WRITABLE_BOOK)
+            gui.setSlot(26, new GuiElementBuilder(Items.WRITABLE_BOOK)
                 .setName(Component.literal("\u00a7eMore shared homes..."))
                 .addLoreLine(Component.literal("\u00a77You have " + shared.size() + " shared homes."))
                 .addLoreLine(Component.literal("\u00a77Click to open the full list."))
-                .setCallback((index, type, input, slotGui) -> {
-                    gui.close();
-                    SharedHomesGui.open(player);
-                })
+                .setCallback((idx, type, input, slotGui) -> { gui.close(); SharedHomesGui.open(player); })
                 .build());
         }
-
-        gui.open();
     }
 
     private static GuiElementBuilder builderForHome(Home home, ServerPlayer player) {
