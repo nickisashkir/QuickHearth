@@ -5,15 +5,22 @@ import com.ashkir.quickhearth.command.HomeCommand;
 import com.ashkir.quickhearth.command.HomesCommand;
 import com.ashkir.quickhearth.command.QuickHearthCommand;
 import com.ashkir.quickhearth.command.SetHomeCommand;
+import com.ashkir.quickhearth.command.ShareAcceptCommand;
+import com.ashkir.quickhearth.command.ShareDenyCommand;
+import com.ashkir.quickhearth.command.ShareHomeCommand;
+import com.ashkir.quickhearth.command.SharedHomesCommand;
 import com.ashkir.quickhearth.command.SpawnCommand;
 import com.ashkir.quickhearth.command.TpAcceptCommand;
 import com.ashkir.quickhearth.command.TpDenyCommand;
 import com.ashkir.quickhearth.command.TpaCommand;
 import com.ashkir.quickhearth.command.TpaHereCommand;
 import com.ashkir.quickhearth.command.TpaToggleCommand;
+import com.ashkir.quickhearth.command.UnshareHomeCommand;
 import com.ashkir.quickhearth.data.HomeStorage;
 import com.ashkir.quickhearth.data.PlayerToggleStorage;
+import com.ashkir.quickhearth.data.ShareStorage;
 import com.ashkir.quickhearth.limits.HomeLimitProvider;
+import com.ashkir.quickhearth.teleport.ShareManager;
 import com.ashkir.quickhearth.teleport.TeleportService;
 import com.ashkir.quickhearth.teleport.TpaManager;
 import net.fabricmc.api.ModInitializer;
@@ -38,9 +45,11 @@ public final class QuickHearth implements ModInitializer {
     private ConfigManager configManager;
     private HomeStorage homeStorage;
     private PlayerToggleStorage toggleStorage;
+    private ShareStorage shareStorage;
     private HomeLimitProvider limitProvider;
     private TeleportService teleportService;
     private TpaManager tpaManager;
+    private ShareManager sharePending;
     private CombatTracker combatTracker;
 
     public static QuickHearth get() { return INSTANCE; }
@@ -49,9 +58,11 @@ public final class QuickHearth implements ModInitializer {
     public ConfigManager configManager() { return configManager; }
     public HomeStorage homes() { return homeStorage; }
     public PlayerToggleStorage toggles() { return toggleStorage; }
+    public ShareStorage shares() { return shareStorage; }
     public HomeLimitProvider limits() { return limitProvider; }
     public TeleportService teleport() { return teleportService; }
     public TpaManager tpa() { return tpaManager; }
+    public ShareManager sharePending() { return sharePending; }
     public CombatTracker combat() { return combatTracker; }
 
     @Override
@@ -70,6 +81,7 @@ public final class QuickHearth implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(s -> {
             if (teleportService != null) teleportService.tick();
             if (tpaManager != null) tpaManager.tick();
+            if (sharePending != null) sharePending.tick();
         });
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) -> {
@@ -83,6 +95,11 @@ public final class QuickHearth implements ModInitializer {
             TpAcceptCommand.register(dispatcher);
             TpDenyCommand.register(dispatcher);
             TpaToggleCommand.register(dispatcher);
+            ShareHomeCommand.register(dispatcher);
+            ShareAcceptCommand.register(dispatcher);
+            ShareDenyCommand.register(dispatcher);
+            UnshareHomeCommand.register(dispatcher);
+            SharedHomesCommand.register(dispatcher);
             QuickHearthCommand.register(dispatcher);
         });
     }
@@ -91,15 +108,18 @@ public final class QuickHearth implements ModInitializer {
         this.server = s;
         this.homeStorage = new HomeStorage(s);
         this.toggleStorage = new PlayerToggleStorage(s);
+        this.shareStorage = new ShareStorage(s);
         this.limitProvider = new HomeLimitProvider();
         this.teleportService = new TeleportService();
         this.tpaManager = new TpaManager();
+        this.sharePending = new ShareManager();
         ensureBonusObjective(s);
     }
 
     private void onServerStopping(MinecraftServer s) {
         if (homeStorage != null) homeStorage.flushAll();
         if (toggleStorage != null) toggleStorage.flush();
+        if (shareStorage != null) shareStorage.save();
     }
 
     private void ensureBonusObjective(MinecraftServer s) {

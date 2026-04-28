@@ -26,6 +26,7 @@ public final class DelHomeCommand {
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer p)) return 0;
         String name = StringArgumentType.getString(ctx, "name").trim();
         if (QuickHearth.get().homes().delete(p.getUUID(), name)) {
+            QuickHearth.get().shares().unshareAllForHome(p.getUUID(), name);
             p.sendSystemMessage(Component.literal("\u00a77Removed home \u00a7f" + name));
             return 1;
         }
