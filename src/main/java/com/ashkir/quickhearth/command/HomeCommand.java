@@ -43,7 +43,7 @@ public final class HomeCommand {
             .requires(src -> Perms.check(src, "quickhearth.command.home", true))
             .executes(HomeCommand::openGui)
             .then(Commands.literal("help").executes(HomeCommand::showHelp))
-            .then(Commands.argument("name", StringArgumentType.word())
+            .then(Commands.argument("name", StringArgumentType.greedyString())
                 .suggests(HOME_NAMES)
                 .executes(HomeCommand::teleportToNamed))
         );
@@ -73,7 +73,7 @@ public final class HomeCommand {
 
     private static int teleportToNamed(CommandContext<CommandSourceStack> ctx) {
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer p)) return 0;
-        String name = StringArgumentType.getString(ctx, "name");
+        String name = StringArgumentType.getString(ctx, "name").trim();
         Optional<Home> home = QuickHearth.get().homes().get(p.getUUID(), name);
         if (home.isEmpty()) {
             p.sendSystemMessage(Component.literal("\u00a7cNo home named '" + name + "'. Try \u00a7e/home help\u00a7c."));

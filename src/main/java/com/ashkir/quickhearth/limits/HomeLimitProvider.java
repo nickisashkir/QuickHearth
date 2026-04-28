@@ -36,7 +36,7 @@ public class HomeLimitProvider {
 
     public int bonus(ServerPlayer player) {
         Scoreboard sb = player.level().getServer().getScoreboard();
-        Objective obj = sb.getObjective(QuickHearth.SCOREBOARD_BONUS);
+        Objective obj = sb.getObjective(Config.BONUS_OBJECTIVE_NAME);
         if (obj == null) return 0;
         ReadOnlyScoreInfo info = sb.getPlayerScoreInfo(player, obj);
         if (info == null) return 0;

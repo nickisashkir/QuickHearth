@@ -1,6 +1,8 @@
 package com.ashkir.quickhearth.teleport;
 
+import com.ashkir.quickhearth.CombatTracker;
 import com.ashkir.quickhearth.Config;
+import com.ashkir.quickhearth.QuickHearth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -55,6 +57,12 @@ public class TeleportService {
     public boolean queue(ServerPlayer p, Destination dest, String label, int cooldownTicks, Runnable onComplete) {
         if (pending.containsKey(p.getUUID())) {
             p.sendSystemMessage(Component.literal("\u00a7cYou already have a teleport queued."));
+            return false;
+        }
+        CombatTracker combat = QuickHearth.get().combat();
+        if (combat != null && combat.isTagged(p)) {
+            p.sendSystemMessage(Component.literal("\u00a7cYou're in combat. Wait \u00a7e"
+                + combat.remainingSeconds(p) + "s\u00a7c before teleporting."));
             return false;
         }
         long now = p.level().getGameTime();

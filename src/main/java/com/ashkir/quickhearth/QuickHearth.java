@@ -3,6 +3,7 @@ package com.ashkir.quickhearth;
 import com.ashkir.quickhearth.command.DelHomeCommand;
 import com.ashkir.quickhearth.command.HomeCommand;
 import com.ashkir.quickhearth.command.HomesCommand;
+import com.ashkir.quickhearth.command.QuickHearthCommand;
 import com.ashkir.quickhearth.command.SetHomeCommand;
 import com.ashkir.quickhearth.command.SpawnCommand;
 import com.ashkir.quickhearth.command.TpAcceptCommand;
@@ -29,30 +30,39 @@ import org.slf4j.LoggerFactory;
 
 public final class QuickHearth implements ModInitializer {
     public static final String MOD_ID = "quickhearth";
-    public static final String SCOREBOARD_BONUS = "homes_bonus";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     private static QuickHearth INSTANCE;
 
     private MinecraftServer server;
+    private ConfigManager configManager;
     private HomeStorage homeStorage;
     private PlayerToggleStorage toggleStorage;
     private HomeLimitProvider limitProvider;
     private TeleportService teleportService;
     private TpaManager tpaManager;
+    private CombatTracker combatTracker;
 
     public static QuickHearth get() { return INSTANCE; }
 
     public MinecraftServer server() { return server; }
+    public ConfigManager configManager() { return configManager; }
     public HomeStorage homes() { return homeStorage; }
     public PlayerToggleStorage toggles() { return toggleStorage; }
     public HomeLimitProvider limits() { return limitProvider; }
     public TeleportService teleport() { return teleportService; }
     public TpaManager tpa() { return tpaManager; }
+    public CombatTracker combat() { return combatTracker; }
 
     @Override
     public void onInitialize() {
         INSTANCE = this;
+
+        this.configManager = new ConfigManager();
+        this.configManager.load();
+
+        this.combatTracker = new CombatTracker();
+        this.combatTracker.register();
 
         ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarted);
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
@@ -73,6 +83,7 @@ public final class QuickHearth implements ModInitializer {
             TpAcceptCommand.register(dispatcher);
             TpDenyCommand.register(dispatcher);
             TpaToggleCommand.register(dispatcher);
+            QuickHearthCommand.register(dispatcher);
         });
     }
 
@@ -92,12 +103,13 @@ public final class QuickHearth implements ModInitializer {
     }
 
     private void ensureBonusObjective(MinecraftServer s) {
+        String name = Config.BONUS_OBJECTIVE_NAME;
         Scoreboard sb = s.getScoreboard();
-        Objective obj = sb.getObjective(SCOREBOARD_BONUS);
+        Objective obj = sb.getObjective(name);
         if (obj == null) {
-            sb.addObjective(SCOREBOARD_BONUS, ObjectiveCriteria.DUMMY,
+            sb.addObjective(name, ObjectiveCriteria.DUMMY,
                 Component.literal("Bonus Homes"), ObjectiveCriteria.RenderType.INTEGER, false, null);
-            LOGGER.info("Created scoreboard objective '{}' for bonus home grants", SCOREBOARD_BONUS);
+            LOGGER.info("Created scoreboard objective '{}' for bonus home grants", name);
         }
     }
 }
