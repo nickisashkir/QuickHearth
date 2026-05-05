@@ -1,7 +1,9 @@
 package com.ashkir.quickhearth.command;
 
 import com.ashkir.quickhearth.Config;
+import com.ashkir.quickhearth.ModConfig;
 import com.ashkir.quickhearth.QuickHearth;
+import com.ashkir.quickhearth.XpCostHelper;
 import com.ashkir.quickhearth.teleport.TeleportService;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
@@ -37,6 +39,9 @@ public final class SpawnCommand {
             p.sendSystemMessage(Component.literal("\u00a7cYou must wait \u00a7e" + ts.cooldownRemaining(p) + "s\u00a7c before teleporting again."));
             return 0;
         }
+        ModConfig.TeleportXpCost xpCfg = QuickHearth.get().configManager().get().teleportXpCost;
+        int cost = XpCostHelper.calculate(p, overworld, spawn.getX() + 0.5, spawn.getZ() + 0.5, xpCfg.spawnBase, null);
+        if (!XpCostHelper.tryDeductOrFail(p, cost)) return 0;
         TeleportService.Destination dest = new TeleportService.Destination(
             overworld, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, yaw, pitch);
         return ts.queue(p, dest, "spawn", Config.SPAWN_COOLDOWN_TICKS) ? 1 : 0;

@@ -32,7 +32,10 @@ public final class HomesGui {
         HomeStorage storage = QuickHearth.get().homes();
         HomeLimitProvider limits = QuickHearth.get().limits();
         List<String> names = storage.sortedNames(player.getUUID());
-        List<SharedHome> shared = QuickHearth.get().shares().sharesFor(player.getUUID());
+        boolean sharingOn = QuickHearth.get().configManager().get().homeSharing.enabled;
+        List<SharedHome> shared = sharingOn
+            ? QuickHearth.get().shares().sharesFor(player.getUUID())
+            : java.util.Collections.emptyList();
         int max = limits.max(player);
         int used = names.size();
 

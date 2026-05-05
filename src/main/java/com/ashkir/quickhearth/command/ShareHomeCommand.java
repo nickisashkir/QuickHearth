@@ -26,6 +26,10 @@ public final class ShareHomeCommand {
 
     private static int run(CommandContext<CommandSourceStack> ctx) {
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer owner)) return 0;
+        if (!QuickHearth.get().configManager().get().homeSharing.enabled) {
+            owner.sendSystemMessage(Component.literal("\u00a7cHome sharing is disabled on this server."));
+            return 0;
+        }
         String targetName = StringArgumentType.getString(ctx, "player");
         String homeName = StringArgumentType.getString(ctx, "home").trim();
 

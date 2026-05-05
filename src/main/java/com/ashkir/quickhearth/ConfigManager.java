@@ -72,5 +72,16 @@ public class ConfigManager {
         if (current.tpaRequestTimeoutSeconds < 5) current.tpaRequestTimeoutSeconds = 5;
         if (current.defaultMaxHomes < 0) current.defaultMaxHomes = 0;
         if (current.combatTagSeconds < 0) current.combatTagSeconds = 0;
+        if (current.homeSharing == null) current.homeSharing = new ModConfig.HomeSharing();
+        if (current.teleportXpCost == null) current.teleportXpCost = new ModConfig.TeleportXpCost();
+        if (current.buyHome == null) current.buyHome = new ModConfig.BuyHome();
+        if (current.teleportXpCost.primaryHomeName == null || current.teleportXpCost.primaryHomeName.isBlank()) {
+            current.teleportXpCost.primaryHomeName = "home";
+        }
+        if (current.teleportXpCost.maxLevels < 0) current.teleportXpCost.maxLevels = 0;
+        if (current.teleportXpCost.blocksPerLevel < 0) current.teleportXpCost.blocksPerLevel = 0;
+        if (current.buyHome.baseCost < 0) current.buyHome.baseCost = 0;
+        if (current.buyHome.costMultiplier < 0.0) current.buyHome.costMultiplier = 0.0;
+        if (current.buyHome.maxBonus < 0) current.buyHome.maxBonus = 0;
     }
 }

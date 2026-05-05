@@ -56,6 +56,9 @@ public final class SetHomeCommand {
         if (!overwrite) {
             int max = limits.max(p);
             int current = storage.homes(p.getUUID()).size();
+            if (cfg.homeSharing != null && cfg.homeSharing.countTowardLimit) {
+                current += QuickHearth.get().shares().sharesFor(p.getUUID()).size();
+            }
             if (current >= max) {
                 p.sendSystemMessage(Component.literal("\u00a7cYou've reached your home limit (" + max + "). Delete one first."));
                 return 0;

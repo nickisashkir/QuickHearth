@@ -1,5 +1,6 @@
 package com.ashkir.quickhearth;
 
+import com.ashkir.quickhearth.command.BuyHomeCommand;
 import com.ashkir.quickhearth.command.DelHomeCommand;
 import com.ashkir.quickhearth.command.HomeCommand;
 import com.ashkir.quickhearth.command.HomeIconCommand;
@@ -104,6 +105,7 @@ public final class QuickHearth implements ModInitializer {
             SharedHomesCommand.register(dispatcher);
             HomeIconCommand.register(dispatcher);
             HomeRenameCommand.register(dispatcher);
+            BuyHomeCommand.register(dispatcher);
             QuickHearthCommand.register(dispatcher);
         });
     }

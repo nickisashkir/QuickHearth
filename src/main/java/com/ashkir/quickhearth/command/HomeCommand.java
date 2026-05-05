@@ -1,7 +1,9 @@
 package com.ashkir.quickhearth.command;
 
 import com.ashkir.quickhearth.Config;
+import com.ashkir.quickhearth.ModConfig;
 import com.ashkir.quickhearth.QuickHearth;
+import com.ashkir.quickhearth.XpCostHelper;
 import com.ashkir.quickhearth.data.Home;
 import com.ashkir.quickhearth.gui.HomesGui;
 import com.ashkir.quickhearth.teleport.TeleportService;
@@ -96,6 +98,9 @@ public final class HomeCommand {
             p.sendSystemMessage(Component.literal("\u00a7cThat home's dimension isn't loaded."));
             return false;
         }
+        ModConfig.TeleportXpCost xpCfg = QuickHearth.get().configManager().get().teleportXpCost;
+        int cost = XpCostHelper.calculate(p, level, home.x(), home.z(), xpCfg.homeBase, home.name());
+        if (!XpCostHelper.tryDeductOrFail(p, cost)) return false;
         TeleportService.Destination dest = new TeleportService.Destination(
             level, home.x(), home.y(), home.z(), home.yaw(), home.pitch());
         return ts.queue(p, dest, "home '" + home.name() + "'", Config.HOME_COOLDOWN_TICKS);

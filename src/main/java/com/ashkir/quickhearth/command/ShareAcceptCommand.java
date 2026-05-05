@@ -1,5 +1,6 @@
 package com.ashkir.quickhearth.command;
 
+import com.ashkir.quickhearth.ModConfig;
 import com.ashkir.quickhearth.Perms;
 import com.ashkir.quickhearth.QuickHearth;
 import com.ashkir.quickhearth.data.SharedHome;
@@ -24,12 +25,29 @@ public final class ShareAcceptCommand {
 
     private static int run(CommandContext<CommandSourceStack> ctx) {
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer self)) return 0;
+        ModConfig.HomeSharing sharingCfg = QuickHearth.get().configManager().get().homeSharing;
+        if (!sharingCfg.enabled) {
+            self.sendSystemMessage(Component.literal("\u00a7cHome sharing is disabled on this server."));
+            return 0;
+        }
         Optional<ShareManager.Pending> opt = QuickHearth.get().sharePending().consume(self.getUUID());
         if (opt.isEmpty()) {
             self.sendSystemMessage(Component.literal("\u00a7cNo pending share request."));
             return 0;
         }
         ShareManager.Pending p = opt.get();
+
+        if (sharingCfg.countTowardLimit) {
+            int max = QuickHearth.get().limits().max(self);
+            int owned = QuickHearth.get().homes().homes(self.getUUID()).size();
+            int sharedCount = QuickHearth.get().shares().sharesFor(self.getUUID()).size();
+            if (owned + sharedCount >= max) {
+                self.sendSystemMessage(Component.literal("\u00a7cAccepting would put you over your home limit ("
+                    + (owned + sharedCount) + "/" + max + "). Delete one or unshare first."));
+                return 0;
+            }
+        }
+
         SharedHome share = new SharedHome(p.owner(), p.ownerName(), p.homeName(),
             self.getUUID(), System.currentTimeMillis());
         QuickHearth.get().shares().share(share);

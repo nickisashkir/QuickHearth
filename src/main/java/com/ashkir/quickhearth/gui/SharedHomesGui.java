@@ -22,7 +22,10 @@ public final class SharedHomesGui {
     private static final int CAPACITY = 27;
 
     public static void open(ServerPlayer player) {
-        List<SharedHome> shares = QuickHearth.get().shares().sharesFor(player.getUUID());
+        boolean sharingOn = QuickHearth.get().configManager().get().homeSharing.enabled;
+        List<SharedHome> shares = sharingOn
+            ? QuickHearth.get().shares().sharesFor(player.getUUID())
+            : java.util.Collections.emptyList();
 
         SimpleGui gui = new SimpleGui(MenuType.GENERIC_9x3, player, false);
         gui.setTitle(Component.literal("Shared Homes (" + shares.size() + ")"));

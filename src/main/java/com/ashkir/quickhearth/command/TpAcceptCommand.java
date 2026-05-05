@@ -1,7 +1,9 @@
 package com.ashkir.quickhearth.command;
 
 import com.ashkir.quickhearth.Config;
+import com.ashkir.quickhearth.ModConfig;
 import com.ashkir.quickhearth.QuickHearth;
+import com.ashkir.quickhearth.XpCostHelper;
 import com.ashkir.quickhearth.teleport.TeleportService;
 import com.ashkir.quickhearth.teleport.TpaManager;
 import com.mojang.brigadier.CommandDispatcher;
@@ -38,6 +40,17 @@ public final class TpAcceptCommand {
         }
         ServerPlayer mover = (r.direction() == TpaManager.Direction.TO_TARGET) ? requester : self;
         ServerPlayer destinationPlayer = (mover == requester) ? self : requester;
+
+        ModConfig.TeleportXpCost xpCfg = QuickHearth.get().configManager().get().teleportXpCost;
+        int baseCost = (r.direction() == TpaManager.Direction.TO_TARGET) ? xpCfg.tpaBase : xpCfg.tpahereBase;
+        int cost = XpCostHelper.calculate(mover, destinationPlayer.level(),
+            destinationPlayer.getX(), destinationPlayer.getZ(), baseCost, null);
+        if (!XpCostHelper.tryDeductOrFail(mover, cost)) {
+            self.sendSystemMessage(Component.literal("\u00a7c" + mover.getGameProfile().name()
+                + " could not afford the teleport cost."));
+            return 0;
+        }
+
         TeleportService.Destination dest = new TeleportService.Destination(
             destinationPlayer.level(),
             destinationPlayer.getX(), destinationPlayer.getY(), destinationPlayer.getZ(),
